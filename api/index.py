@@ -71,15 +71,17 @@ class UserQuery(BaseModel):
 @app.post("/api/agent")
 async def run_travel_agent(request: TravelRequest):
     try:
-        # Validate input
+        # 1. Validate input
         if not request.prompt.strip():
             raise HTTPException(status_code=400, detail="Prompt cannot be empty")
 
-        # --- Your LangChain & Gemini 1.5 Flash logic goes here ---
-        # Example dummy response placeholder:
-        ai_itinerary = f"Here is your amazing agentic itinerary for: '{request.prompt}'.\n\n- Day 1: Arrive and explore."
+        # 2. Run your LangChain Agent Executor using the user's prompt
+        result = agent_executor.invoke({"input": request.prompt})
+        
+        # 3. Extract the final text answer from the agent's output dictionary
+        ai_itinerary = result.get("output", "Could not generate an itinerary.")
 
-        # Your HTML expects the text in a key named "response" (data.response)
+        # 4. Return the real AI response to your index.html frontend
         return {"response": ai_itinerary}
 
     except Exception as e:
