@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import AgentExecutor, create_tool_calling_agent
@@ -7,6 +8,17 @@ from langchain_core.tools import tool
 from langchain_core.prompts import ChatPromptTemplate
 
 app = FastAPI()
+
+# -------------------------------------------------------------
+# 🔒 CORS Setup (Allows your HTML frontend to talk to your API)
+# -------------------------------------------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Allows requests from any origin (perfect for Vercel deployment)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # -------------------------------------------------------------
 # 🛠️ Define the Tools (Functions the AI Agent can execute)
@@ -19,7 +31,6 @@ def get_attractions(city: str) -> str:
         "paris": "Eiffel Tower (2 hours), Louvre Museum (4 hours), Montmartre (3 hours)",
         "tokyo": "Shibuya Crossing (1 hour), Senso-ji Temple (2 hours), Akihabara (3 hours)",
     }
-    # Return matched attractions, or a default string if city isn't found
     return database.get(city.lower(), "Local Markets (2 hours), Central Park (2 hours)")
 
 @tool
@@ -29,25 +40,21 @@ def calculate_budget(days: int, style: str) -> str:
     total = days * per_day
     return f"The estimated total cost for a {style} trip lasting {days} days is ${total} USD."
 
-# Put your tools inside a list for the agent
 tools = [get_attractions, calculate_budget]
 
 # -------------------------------------------------------------
 # 🤖 Initialize the Agent
 # -------------------------------------------------------------
 
-# Set up the LLM (Ensure GOOGLE_API_KEY is set in your environment variables)
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
 
-# Define the Prompt that gives the Agent its personality and boundaries
 prompt = ChatPromptTemplate.from_messages([
     ("system", "You are an expert, proactive Travel Agent. You MUST use the provided tools to fetch attractions and calculate budgets. Do not make up prices or guess attractions without using tools."),
     ("placeholder", "{chat_history}"),
     ("human", "{input}"),
-    ("placeholder", "{agent_scratchpad}"), # LangChain uses this to handle the reasoning loop
+    ("placeholder", "{agent_scratchpad}"), 
 ])
 
-# Assemble the agent
 agent = create_tool_calling_agent(llm, tools, prompt)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
@@ -61,7 +68,6 @@ class UserQuery(BaseModel):
 @app.post("/api/agent")
 def run_travel_agent(query: UserQuery):
     try:
-        # Run the agentic loop
         response = agent_executor.invoke({"input": query.prompt})
         return {"response": response["output"]}
     except Exception as e:
