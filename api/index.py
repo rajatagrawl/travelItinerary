@@ -29,12 +29,18 @@ class TravelRequest(BaseModel):
 
 @tool
 def get_attractions(city: str) -> str:
-    """Fetch top local attractions and estimated visit times for a given city."""
-    database = {
-        "paris": "Eiffel Tower (2 hours), Louvre Museum (4 hours), Montmartre (3 hours)",
-        "tokyo": "Shibuya Crossing (1 hour), Senso-ji Temple (2 hours), Akihabara (3 hours)",
-    }
-    return database.get(city.lower(), "Local Markets (2 hours), Central Park (2 hours)")
+    """Fetch top local attractions and estimated visit times for any given city dynamically."""
+    try:
+        # Spin up a lightweight, deterministic backend instance to fetch real-world data points
+        data_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.1)
+        response = data_llm.invoke(
+            f"List 4 to 6 top popular local attractions and landmarks for {city} along with a recommended visit duration for each in parentheses. "
+            f"Keep the output brief, factual, and strictly on one line. Example: Eiffel Tower (2 hours), Louvre Museum (4 hours)"
+        )
+        return response.content
+    except Exception as e:
+        # Safe fallback if the API network call experiences a temporary hiccup
+        return f"Popular local landmarks, historic quarters, and cultural markets in {city}."
 
 @tool
 def calculate_budget(days: int, style: str) -> str:
