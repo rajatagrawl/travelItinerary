@@ -52,7 +52,13 @@ tools = [get_attractions, calculate_budget]
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
 
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are an expert, proactive Travel Agent. You MUST use the provided tools to fetch attractions and calculate budgets. Do not make up prices or guess attractions without using tools."),
+    ("system", (
+        "You are an expert Travel Agent. You MUST use the provided tools to fetch attractions and budgets.\n\n"
+        "CRITICAL FORMATTING RULES:\n"
+        "1. You must organize the attractions found into a clear, day-by-day itinerary (e.g., Day 1:, Day 2:).\n"
+        "2. Display the budget options clearly using the tool output.\n"
+        "3. Output ONLY the itinerary and the budget. Do NOT include any concluding remarks, questions, conversational filler, or offers for further help at the end of your response."
+    )),
     ("placeholder", "{chat_history}"),
     ("human", "{input}"),
     ("placeholder", "{agent_scratchpad}"),
