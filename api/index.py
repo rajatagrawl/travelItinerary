@@ -49,7 +49,7 @@ tools = [get_attractions, calculate_budget]
 # 🤖 Initialize the Agent
 # -------------------------------------------------------------
 
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
 
 prompt = ChatPromptTemplate.from_messages([
     ("system", "You are an expert, proactive Travel Agent. You MUST use the provided tools to fetch attractions and calculate budgets. Do not make up prices or guess attractions without using tools."),
