@@ -20,6 +20,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class TravelRequest(BaseModel):
+    prompt: str
+
 # -------------------------------------------------------------
 # 🛠️ Define the Tools (Functions the AI Agent can execute)
 # -------------------------------------------------------------
@@ -52,7 +55,7 @@ prompt = ChatPromptTemplate.from_messages([
     ("system", "You are an expert, proactive Travel Agent. You MUST use the provided tools to fetch attractions and calculate budgets. Do not make up prices or guess attractions without using tools."),
     ("placeholder", "{chat_history}"),
     ("human", "{input}"),
-    ("placeholder", "{agent_scratchpad}"), 
+    ("placeholder", "{agent_scratchpad}"),
 ])
 
 agent = create_tool_calling_agent(llm, tools, prompt)
@@ -71,16 +74,15 @@ async def run_travel_agent(request: TravelRequest):
         # Validate input
         if not request.prompt.strip():
             raise HTTPException(status_code=400, detail="Prompt cannot be empty")
-        
+
         # --- Your LangChain & Gemini 1.5 Flash logic goes here ---
         # Example dummy response placeholder:
         ai_itinerary = f"Here is your amazing agentic itinerary for: '{request.prompt}'.\n\n- Day 1: Arrive and explore."
-        
+
         # Your HTML expects the text in a key named "response" (data.response)
         return {"response": ai_itinerary}
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 # IMPORTANT: Keep /api/agent to align with your fetch request and Vercel rewrite
-
