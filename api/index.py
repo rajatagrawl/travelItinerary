@@ -66,9 +66,21 @@ class UserQuery(BaseModel):
     prompt: str
 
 @app.post("/api/agent")
-def run_travel_agent(query: UserQuery):
+async def run_travel_agent(request: TravelRequest):
     try:
-        response = agent_executor.invoke({"input": query.prompt})
-        return {"response": response["output"]}
+        # Validate input
+        if not request.prompt.strip():
+            raise HTTPException(status_code=400, detail="Prompt cannot be empty")
+        
+        # --- Your LangChain & Gemini 1.5 Flash logic goes here ---
+        # Example dummy response placeholder:
+        ai_itinerary = f"Here is your amazing agentic itinerary for: '{request.prompt}'.\n\n- Day 1: Arrive and explore."
+        
+        # Your HTML expects the text in a key named "response" (data.response)
+        return {"response": ai_itinerary}
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# IMPORTANT: Keep /api/agent to align with your fetch request and Vercel rewrite
+
